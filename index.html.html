@@ -1,0 +1,727 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Academic Tracker: Student Progress at a Glance</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            font-family: Arial, sans-serif;
+        }
+        header {
+            background-color: #2c3e50;
+            color: white;
+            padding: 2rem;
+            text-align: center;
+            position: relative;
+        }
+        header h1 {
+            font-size: 2.5rem;
+            margin-bottom: 0.5rem;
+        }
+        header p {
+            font-size: 1.1rem;
+            color: #ecf0f1;
+        }
+        #login-btn, #logout-btn {
+            position: absolute;
+            top: 1rem;
+            right: 1rem;
+            padding: 0.5rem 1rem;
+            background-color: #ecf0f1;
+            color: #2c3e50;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+        }
+        #logout-btn {
+            background-color: #e74c3c;
+            color: white;
+            display: none;
+        }
+        #login-btn:hover {
+            background-color: #bdc3c7;
+        }
+        #logout-btn:hover {
+            background-color: #c0392b;
+        }
+        .modal {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background-color: rgba(0, 0, 0, 0.5);
+        }
+        .modal-content {
+            background-color: white;
+            margin: 15% auto;
+            padding: 2rem;
+            width: 90%;
+            max-width: 400px;
+            border-radius: 8px;
+            text-align: center;
+            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
+        }
+        .close {
+            float: right;
+            font-size: 1.5rem;
+            cursor: pointer;
+            color: #2c3e50;
+        }
+        .modal-content h2 {
+            margin-bottom: 1rem;
+            color: #2c3e50;
+        }
+        .modal-content form {
+            display: flex;
+            flex-direction: column;
+            gap: 1rem;
+        }
+        .modal-content label {
+            font-size: 1rem;
+            color: #2c3e50;
+            text-align: left;
+        }
+        .modal-content input {
+            padding: 0.5rem;
+            border: 1px solid #ddd;
+            border-radius: 4px;
+        }
+        .modal-content button {
+            padding: 0.5rem;
+            background-color: #2c3e50;
+            color: white;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+        }
+        .modal-content button:hover {
+            background-color: #34495e;
+        }
+        .dashboard {
+            padding: 2rem;
+            background-color: #f4f4f4;
+            text-align: center;
+        }
+        .hidden {
+            display: none;
+        }
+        .welcome-section {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 1rem;
+            margin-bottom: 2rem;
+        }
+        .welcome-section img {
+            width: 100px;
+            height: 100px;
+            border-radius: 50%;
+            object-fit: cover;
+            border: 3px solid #2c3e50;
+        }
+        .welcome-section h2 {
+            font-size: 2rem;
+            color: #2c3e50;
+        }
+        .exam-selection {
+            margin: 1rem 0;
+            display: flex;
+            align-items: center;
+            gap: 1rem;
+            justify-content: center;
+        }
+        .exam-selection label {
+            margin-right: 1rem;
+        }
+        .exam-selection select {
+            padding: 0.5rem;
+            border: 1px solid #ddd;
+            border-radius: 4px;
+        }
+        .exam-selection button {
+            padding: 0.5rem 1rem;
+            background-color: #3498db;
+            color: white;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+        }
+        .exam-selection button:hover {
+            background-color: #2980b9;
+        }
+        .stats-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 2rem;
+            max-width: 1200px;
+            margin: 0 auto 2rem;
+        }
+        .stat-card {
+            background-color: white;
+            padding: 1.5rem;
+            border-radius: 8px;
+            box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
+            transition: transform 0.2s;
+        }
+        .stat-card:hover {
+            transform: translateY(-5px);
+        }
+        .stat-card h3 {
+            font-size: 1.3rem;
+            color: #2c3e50;
+            margin-bottom: 0.5rem;
+        }
+        .stat-card p {
+            font-size: 1.5rem;
+            color: #666;
+        }
+        .progress-bar {
+            width: 100%;
+            height: 20px;
+            background-color: #ddd;
+            border-radius: 10px;
+            overflow: hidden;
+            margin: 0.5rem 0;
+        }
+        .progress-fill {
+            height: 100%;
+            background-color: #2c3e50;
+            transition: width 0.5s ease;
+        }
+        .grade-card {
+            max-width: 1200px;
+            margin: 0 auto 2rem;
+            background-color: white;
+            border-radius: 8px;
+            box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
+            overflow-x: auto;
+        }
+        table {
+            width: 100%;
+            border-collapse: collapse;
+        }
+        thead {
+            background-color: #2c3e50;
+            color: white;
+        }
+        th, td {
+            padding: 1rem;
+            text-align: center;
+            border-bottom: 1px solid #ddd;
+        }
+        th {
+            font-size: 1.1rem;
+        }
+        .total-row {
+            background-color: #ecf0f1;
+            font-weight: bold;
+        }
+        .total-row td {
+            border-top: 2px solid #2c3e50;
+        }
+        h2 {
+            margin-bottom: 2rem;
+        }
+        .completion-spacer {
+            height: 2rem;
+        }
+        .subjects-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 2rem;
+            max-width: 1200px;
+            margin: 0 auto;
+        }
+        .subject-card {
+            background-color: white;
+            padding: 1.5rem;
+            border-radius: 10px;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+            text-align: center;
+            transition: transform 0.2s;
+        }
+        .subject-card:hover {
+            transform: translateY(-5px);
+        }
+        .subject-card h3 {
+            font-size: 1.2rem;
+            color: #2c3e50;
+            margin-bottom: 0.5rem;
+            font-weight: bold;
+        }
+        .subject-card p {
+            font-size: 1rem;
+            color: #666;
+            margin-bottom: 0.5rem;
+        }
+        footer {
+            background-color: #2c3e50;
+            color: white;
+            text-align: center;
+            padding: 1rem;
+        }
+        @media (max-width: 600px) {
+            header h1 {
+                font-size: 2rem;
+            }
+            .welcome-section {
+                flex-direction: column;
+                gap: 0.5rem;
+            }
+            .welcome-section h2 {
+                font-size: 1.5rem;
+            }
+            .stats-grid, .subjects-grid {
+                grid-template-columns: 1fr;
+            }
+            .grade-card table {
+                font-size: 0.9rem;
+            }
+            .modal-content {
+                margin: 20% auto;
+            }
+            .exam-selection {
+                flex-direction: column;
+                gap: 0.5rem;
+            }
+        }
+    </style>
+</head>
+<body>
+    <header>
+        <h1>Academic Tracker</h1>
+        <p>Student Progress at a Glance</p>
+        <button id="login-btn">Login</button>
+        <button id="logout-btn">Logout</button>
+    </header>
+
+    <div id="login-modal" class="modal">
+        <div class="modal-content">
+            <span id="close-modal" class="close">×</span>
+            <h2>Student Login</h2>
+            <form id="login-form">
+                <label for="student-id">Student ID:</label>
+                <input type="text" id="student-id" placeholder="Enter your ID" required>
+                <label for="student-name-input">Student Name:</label>
+                <input type="text" id="student-name-input" placeholder="Enter your name" required>
+                <button type="submit">Login</button>
+            </form>
+        </div>
+    </div>
+
+    <section id="dashboard" class="dashboard hidden">
+        <div class="welcome-section">
+            <img id="student-image" src="https://imgs.search.brave.com/DPSJoz76zEwLR7ATWws_XUh7_Z1zmScTrqEdHeP9AFc/rs:fit:860:0:0:0/g:ce/aHR0cHM6Ly9pbWFn/ZXMuZnJlZWltYWdl/cy5jb20vaW1hZ2Vz/L2xhcmdlLXByZXZp/ZXdzL2UyYy9mb2N1/c2VkLWFzaWFuLXN0/dWRlbnQtc3R1ZHlp/bmctMDQxMC01Njk3/NDc5LmpwZz9mbXQ" alt="Student Image">
+            <h2>Welcome, <span id="student-name">Student</span>!</h2>
+        </div>
+        <div class="stats-grid">
+            <div class="stat-card">
+                <h3>Attendance</h3>
+                <p id="attendance">90%</p>
+            </div>
+            <div class="stat-card">
+                <h3>Course Completion</h3>
+                <div class="progress-bar">
+                    <div id="progress" class="progress-fill" style="width: 85%;"></div>
+                </div>
+                <p id="course-completion">85%</p>
+            </div>
+            <div class="stat-card">
+                <h3>Rank</h3>
+                <p id="rank">N/A</p>
+            </div>
+            <div class="stat-card">
+                <h3>GPA</h3>
+                <p id="gpa">N/A</p>
+            </div>
+        </div>
+
+        <h2>Grade Card</h2>
+        <div class="exam-selection">
+            <label><input type="radio" name="exam-type" value="internal" checked> Internal Examination</label>
+            <label for="exam-period">Exam:</label>
+            <select id="exam-period">
+                <option value="periodic-test-1">Periodic Test-I Odd 2024-2025</option>
+                <option value="mid-sem">Mid Sem Exam Odd 2024-2025 / 2</option>
+                <option value="periodic-test-2">Periodic Test II Odd 2024-2025</option>
+            </select>
+            <button id="show-marks-btn">Show</button>
+        </div>
+        <div class="grade-card">
+            <table>
+                <thead>
+                    <tr>
+                        <th>Sr No</th>
+                        <th>Subject</th>
+                        <th>Subject Code</th>
+                        <th>Out of Marks</th>
+                        <th>Obtained Marks</th>
+                    </tr>
+                </thead>
+                <tbody id="grade-table-body">
+                    <tr>
+                        <td>1</td>
+                        <td>Design and Analysis of Algorithms (DAA)</td>
+                        <td>DAA101</td>
+                        <td>20</td>
+                        <td id="mark1">N/A</td>
+                    </tr>
+                    <tr>
+                        <td>2</td>
+                        <td>Discrete Mathematics (DM)</td>
+                        <td>DM102</td>
+                        <td>20</td>
+                        <td id="mark2">N/A</td>
+                    </tr>
+                    <tr>
+                        <td>3</td>
+                        <td>Organizational Behavior (OB)</td>
+                        <td>OB103</td>
+                        <td>20</td>
+                        <td id="mark3">N/A</td>
+                    </tr>
+                    <tr>
+                        <td>4</td>
+                        <td>Universal Human Values (UHV)</td>
+                        <td>UHV104</td>
+                        <td>20</td>
+                        <td id="mark4">N/A</td>
+                    </tr>
+                    <tr>
+                        <td>5</td>
+                        <td>Web Technology (WT)</td>
+                        <td>WT105</td>
+                        <td>20</td>
+                        <td id="mark5">N/A</td>
+                    </tr>
+                    <tr>
+                        <td>6</td>
+                        <td>Probability and Statistics (PS)</td>
+                        <td>PS106</td>
+                        <td>20</td>
+                        <td id="mark6">N/A</td>
+                    </tr>
+                    <tr class="total-row">
+                        <td colspan="3">Total</td>
+                        <td>120</td>
+                        <td id="total-obtained">N/A</td>
+                    </tr>
+                </tbody>
+            </table>
+        </div>
+
+        <h2>Course Wise Completion</h2>
+        <div class="completion-spacer"></div>
+        <div class="subjects-grid">
+            <div class="subject-card">
+                <h3>DAA</h3>
+                <p>Design and Analysis of Algorithms</p>
+                <div class="progress-bar">
+                    <div id="sub-progress1" class="progress-fill" style="width: 80%;"></div>
+                </div>
+                <p>Completion: <span id="sub-completion1">80</span>%</p>
+            </div>
+            <div class="subject-card">
+                <h3>DM</h3>
+                <p>Discrete Mathematics</p>
+                <div class="progress-bar">
+                    <div id="sub-progress2" class="progress-fill" style="width: 85%;"></div>
+                </div>
+                <p>Completion: <span id="sub-completion2">85</span>%</p>
+            </div>
+            <div class="subject-card">
+                <h3>OB</h3>
+                <p>Organizational Behavior</p>
+                <div class="progress-bar">
+                    <div id="sub-progress3" class="progress-fill" style="width: 75%;"></div>
+                </div>
+                <p>Completion: <span id="sub-completion3">75</span>%</p>
+            </div>
+            <div class="subject-card">
+                <h3>UHV</h3>
+                <p>Universal Human Values</p>
+                <div class="progress-bar">
+                    <div id="sub-progress4" class="progress-fill" style="width: 90%;"></div>
+                </div>
+                <p>Completion: <span id="sub-completion4">90</span>%</p>
+            </div>
+            <div class="subject-card">
+                <h3>WT</h3>
+                <p>Web Technology</p>
+                <div class="progress-bar">
+                    <div id="sub-progress5" class="progress-fill" style="width: 70%;"></div>
+                </div>
+                <p>Completion: <span id="sub-completion5">70</span>%</p>
+            </div>
+            <div class="subject-card">
+                <h3>PS</h3>
+                <p>Probability and Statistics</p>
+                <div class="progress-bar">
+                    <div id="sub-progress6" class="progress-fill" style="width: 82%;"></div>
+                </div>
+                <p>Completion: <span id="sub-completion6">82</span>%</p>
+            </div>
+        </div>
+    </section>
+
+    <footer>
+        <p>© 2025 Academic Tracker. All rights reserved.</p>
+    </footer>
+
+    <script>
+        const loginBtn = document.getElementById('login-btn');
+        const logoutBtn = document.getElementById('logout-btn');
+        const modal = document.getElementById('login-modal');
+        const closeModal = document.getElementById('close-modal');
+        const loginForm = document.getElementById('login-form');
+        const dashboard = document.getElementById('dashboard');
+        const studentName = document.getElementById('student-name');
+        const studentImage = document.getElementById('student-image');
+        const attendance = document.getElementById('attendance');
+        const courseCompletion = document.getElementById('course-completion');
+        const progress = document.getElementById('progress');
+        const rank = document.getElementById('rank');
+        const gpa = document.getElementById('gpa');
+        const gradeMarks = [
+            document.getElementById('mark1'),
+            document.getElementById('mark2'),
+            document.getElementById('mark3'),
+            document.getElementById('mark4'),
+            document.getElementById('mark5'),
+            document.getElementById('mark6'),
+            document.getElementById('total-obtained')
+        ];
+        const subjectCompletions = [
+            document.getElementById('sub-completion1'),
+            document.getElementById('sub-completion2'),
+            document.getElementById('sub-completion3'),
+            document.getElementById('sub-completion4'),
+            document.getElementById('sub-completion5'),
+            document.getElementById('sub-completion6')
+        ];
+        const subProgressBars = [
+            document.getElementById('sub-progress1'),
+            document.getElementById('sub-progress2'),
+            document.getElementById('sub-progress3'),
+            document.getElementById('sub-progress4'),
+            document.getElementById('sub-progress5'),
+            document.getElementById('sub-progress6')
+        ];
+
+        const students = [
+            { id: "STU001", name: "Aarav Sharma", rank: 1, gpa: 9.8 },
+            { id: "STU002", name: "Vihaan Patel", rank: 5, gpa: 9.2 },
+            { id: "STU003", name: "Arjun Singh", rank: 12, gpa: 8.7 },
+            { id: "STU004", name: "Kian Reddy", rank: 8, gpa: 9.0 },
+            { id: "STU005", name: "Reyansh Gupta", rank: 3, gpa: 9.5 },
+            { id: "STU006", name: "Advik Joshi", rank: 15, gpa: 8.4 },
+            { id: "STU007", name: "Samarth Desai", rank: 20, gpa: 8.0 },
+            { id: "STU008", name: "Dhruv Mehta", rank: 10, gpa: 8.9 },
+            { id: "STU009", name: "Ishaan Kapoor", rank: 25, gpa: 7.8 },
+            { id: "STU010", name: "Nivaan Malhotra", rank: 18, gpa: 8.2 },
+            { id: "STU011", name: "Aayush Agarwal", rank: 7, gpa: 9.1 },
+            { id: "STU012", name: "Kabir Yadav", rank: 30, gpa: 7.5 },
+            { id: "STU013", name: "Rohan Mishra", rank: 14, gpa: 8.5 },
+            { id: "STU014", name: "Saanvi Bansal", rank: 2, gpa: 9.7 },
+            { id: "STU015", name: "Ananya Iyer", rank: 9, gpa: 9.0 },
+            { id: "STU016", name: "Diya Nair", rank: 22, gpa: 7.9 },
+            { id: "STU017", name: "Pihu Sharma", rank: 17, gpa: 8.3 },
+            { id: "STU018", name: "Kavya Rao", rank: 28, gpa: 7.6 },
+            { id: "STU019", name: "Sneha Das", rank: 11, gpa: 8.8 },
+            { id: "STU020", name: "Tara Sen", rank: 35, gpa: 7.2 },
+            { id: "STU021", name: "Myra Gupta", rank: 6, gpa: 9.3 },
+            { id: "STU022", name: "Zara Khan", rank: 40, gpa: 6.9 },
+            { id: "STU023", name: "Riya Jain", rank: 13, gpa: 8.6 },
+            { id: "STU024", name: "Aisha Ali", rank: 33, gpa: 7.3 },
+            { id: "STU025", name: "Kiara Chawla", rank: 4, gpa: 9.4 },
+            { id: "STU026", name: "Neha Singh", rank: 27, gpa: 7.7 },
+            { id: "STU027", name: "Priya Kumar", rank: 19, gpa: 8.1 },
+            { id: "STU028", name: "Shreya Bose", rank: 36, gpa: 7.1 },
+            { id: "STU029", name: "Anika Roy", rank: 16, gpa: 8.4 },
+            { id: "STU030", name: "Tanvi Patel", rank: 31, gpa: 7.4 },
+            { id: "STU031", name: "Meera Desai", rank: 23, gpa: 7.9 },
+            { id: "STU032", name: "Lakshmi Iyer", rank: 42, gpa: 6.8 },
+            { id: "STU033", name: "Aditi Sharma", rank: 26, gpa: 7.7 },
+            { id: "STU034", name: "Siya Gupta", rank: 38, gpa: 7.0 },
+            { id: "STU035", name: "Hridya Nair", rank: 21, gpa: 8.0 },
+            { id: "STU036", name: "Vidya Rao", rank: 45, gpa: 6.6 },
+            { id: "STU037", name: "Trisha Das", rank: 24, gpa: 7.8 },
+            { id: "STU038", name: "Jhanvi Sen", rank: 47, gpa: 6.5 },
+            { id: "STU039", name: "Aarna Malhotra", rank: 29, gpa: 7.6 },
+            { id: "STU040", name: "Saanvi Kapoor", rank: 50, gpa: 6.3 },
+            { id: "STU041", name: "Divya Agarwal", rank: 32, gpa: 7.4 },
+            { id: "STU042", name: "Rhea Yadav", rank: 55, gpa: 6.1 },
+            { id: "STU043", name: "Nisha Mishra", rank: 34, gpa: 7.3 },
+            { id: "STU044", name: "Kriti Bansal", rank: 60, gpa: 5.9 },
+            { id: "STU045", name: "Shivani Iyer", rank: 37, gpa: 7.1 },
+            { id: "STU046", name: "Aarti Nair", rank: 65, gpa: 5.7 },
+            { id: "STU047", name: "Pooja Rao", rank: 39, gpa: 7.0 },
+            { id: "STU048", name: "Anjali Das", rank: 70, gpa: 5.5 },
+            { id: "STU049", name: "Swati Sen", rank: 41, gpa: 6.9 },
+            { id: "STU050", name: "Radhika Gupta", rank: 72, gpa: 5.0 },
+            { id: "STU051", name: "Simran Khan", rank: 43, gpa: 6.8 },
+            { id: "STU052", name: "Priyanka Jain", rank: 68, gpa: 5.6 },
+            { id: "STU053", name: "Sakshi Ali", rank: 44, gpa: 6.7 },
+            { id: "STU054", name: "Deepika Chawla", rank: 66, gpa: 5.8 },
+            { id: "STU055", name: "Kajal Singh", rank: 46, gpa: 6.6 },
+            { id: "STU056", name: "Ritu Kumar", rank: 64, gpa: 5.9 },
+            { id: "STU057", name: "Shalini Bose", rank: 48, gpa: 6.5 },
+            { id: "STU058", name: "Geeta Roy", rank: 62, gpa: 6.0 },
+            { id: "STU059", name: "Suman Patel", rank: 49, gpa: 6.4 },
+            { id: "STU060", name: "Naina Desai", rank: 60, gpa: 6.1 },
+            { id: "STU061", name: "Uma Iyer", rank: 51, gpa: 6.3 },
+            { id: "STU062", name: "Vandana Sharma", rank: 58, gpa: 6.2 },
+            { id: "STU063", name: "Jyoti Gupta", rank: 53, gpa: 6.4 },
+            { id: "STU064", name: "Pallavi Nair", rank: 56, gpa: 6.3 },
+            { id: "STU065", name: "Rekha Rao", rank: 54, gpa: 6.5 },
+            { id: "STU066", name: "Sunita Das", rank: 57, gpa: 6.2 },
+            { id: "STU067", name: "Meenakshi Sen", rank: 59, gpa: 6.1 },
+            { id: "STU068", name: "Lata Malhotra", rank: 61, gpa: 6.0 },
+            { id: "STU069", name: "Kiran Kapoor", rank: 63, gpa: 5.9 },
+            { id: "STU070", name: "Anita Agarwal", rank: 67, gpa: 5.7 },
+            { id: "STU071", name: "Sarla Yadav", rank: 69, gpa: 5.6 },
+            { id: "STU072", name: "Preeti Mishra", rank: 71, gpa: 5.4 }
+        ];
+
+        const examMarks = {
+            internal: {
+                "periodic-test-1": students.map((student, index) => ({
+                    id: student.id,
+                    marks: {
+                        DAA: 70 + (index % 30),
+                        DM: 72 + (index % 28),
+                        OB: 68 + (index % 32),
+                        UHV: 75 + (index % 25),
+                        WT: 70 + (index % 30),
+                        PS: 73 + (index % 27)
+                    }
+                })),
+                "mid-sem": students.map((student, index) => ({
+                    id: student.id,
+                    marks: {
+                        DAA: 65 + (index % 35),
+                        DM: 68 + (index % 33),
+                        OB: 66 + (index % 37),
+                        UHV: 70 + (index % 30),
+                        WT: 64 + (index % 35),
+                        PS: 67 + (index % 32)
+                    }
+                })),
+                "periodic-test-2": students.map((student, index) => ({
+                    id: student.id,
+                    marks: {
+                        DAA: 80 + (index % 20),
+                        DM: 82 + (index % 18),
+                        OB: 78 + (index % 22),
+                        UHV: 79 + (index % 21),
+                        WT: 77 + (index % 23),
+                        PS: 81 + (index % 19)
+                    }
+                }))
+            }
+        };
+
+        const examPeriodSelect = document.getElementById('exam-period');
+        const showMarksBtn = document.getElementById('show-marks-btn');
+
+        loginBtn.onclick = () => modal.style.display = 'block';
+        closeModal.onclick = () => modal.style.display = 'none';
+
+        loginForm.onsubmit = (e) => {
+            e.preventDefault();
+            const studentId = document.getElementById('student-id').value;
+            const studentNameInput = document.getElementById('student-name-input').value;
+
+            const student = students.find(s => s.id === studentId && s.name === studentNameInput);
+            if (!student) {
+                alert("Invalid Student ID or Name. Please try again.");
+                return;
+            }
+
+            modal.style.display = 'none';
+            dashboard.classList.remove('hidden');
+            loginBtn.style.display = 'none';
+            logoutBtn.style.display = 'block';
+            studentName.textContent = studentNameInput;
+            studentImage.src = 'https://via.placeholder.com/100';
+            rank.textContent = `${student.rank} / 72`;
+            gpa.textContent = student.gpa.toFixed(2);
+            attendance.textContent = "90%";
+            courseCompletion.textContent = "85%";
+            progress.style.width = "85%";
+
+            const completionPercentages = [80, 85, 75, 90, 70, 82];
+            subjectCompletions.forEach((completion, index) => {
+                completion.textContent = completionPercentages[index];
+                subProgressBars[index].style.width = `${completionPercentages[index]}%`;
+            });
+        };
+
+        function updateMarks() {
+            const examPeriod = examPeriodSelect.value;
+            const studentId = document.getElementById('student-id').value;
+            const studentMarks = examMarks.internal[examPeriod].find(m => m.id === studentId);
+
+            if (studentMarks) {
+                const maxMarksPerSubject = 20;
+                const marksArray = [
+                    Math.round((studentMarks.marks.DAA / 100) * maxMarksPerSubject),
+                    Math.round((studentMarks.marks.DM / 100) * maxMarksPerSubject),
+                    Math.round((studentMarks.marks.OB / 100) * maxMarksPerSubject),
+                    Math.round((studentMarks.marks.UHV / 100) * maxMarksPerSubject),
+                    Math.round((studentMarks.marks.WT / 100) * maxMarksPerSubject),
+                    Math.round((studentMarks.marks.PS / 100) * maxMarksPerSubject)
+                ];
+                const totalObtained = marksArray.reduce((a, b) => a + b, 0);
+
+                gradeMarks.forEach((mark, index) => {
+                    if (index < 6) mark.textContent = marksArray[index];
+                    else mark.textContent = totalObtained;
+                });
+            } else {
+                gradeMarks.forEach((mark, index) => {
+                    if (index < 6) mark.textContent = "N/A";
+                    else mark.textContent = "N/A";
+                });
+            }
+        }
+
+        showMarksBtn.onclick = () => updateMarks();
+
+        logoutBtn.onclick = () => {
+            dashboard.classList.add('hidden');
+            logoutBtn.style.display = 'none';
+            loginBtn.style.display = 'block';
+            studentName.textContent = 'Student';
+            studentImage.src = 'https://via.placeholder.com/100';
+            rank.textContent = "N/A";
+            gpa.textContent = "N/A";
+            attendance.textContent = "90%";
+            courseCompletion.textContent = "85%";
+            progress.style.width = "85%";
+
+            gradeMarks.forEach((mark, index) => {
+                mark.textContent = (index < 6) ? "N/A" : "N/A";
+            });
+
+            const completionPercentages = [80, 85, 75, 90, 70, 82];
+            subjectCompletions.forEach((completion, index) => {
+                completion.textContent = completionPercentages[index];
+                subProgressBars[index].style.width = `${completionPercentages[index]}%`;
+            });
+
+            loginForm.reset();
+        };
+
+        window.onclick = (e) => {
+            if (e.target === modal) modal.style.display = 'none';
+        };
+    </script>
+</body>
+</html>
